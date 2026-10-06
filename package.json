@@ -1,0 +1,20 @@
+{
+  "name": "bunbase",
+  "version": "1.0.0",
+  "main": "server.ts",
+  "module": "server.ts",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "description": "API powered by Bun and TypeScript",
+  "private": true,
+  "scripts": {
+    "dev": "bun --hot server.ts",
+    "start": "bun run server.ts",
+    "buildwindows": "bun build --compile --target=bun-windows-x64 ./server.ts --outfile ./bunimages.exe"
+  },
+  "type": "module"
+}
