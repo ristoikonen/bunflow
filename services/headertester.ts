@@ -50,8 +50,6 @@ const baseHeaders = {
   Accept: "*/*",
   "User-Agent": "Bun-Header-Tester",
   "Connection": "close",
-  "Cookie": "session_token=stress-test-dummy-token-abc123",
-  "Access-Control-Allow-Origin": "*",
 };
   
   //"Connection": "keep-alive",
@@ -61,10 +59,11 @@ const baseHeaders = {
 
 
 const headerPools = {
+  Origin: ["https://trusted-origin.com", "https://evil-origin.com", "null"],
   "X-Forwarded-For": ["203.0.113.195", "127.0.0.1"],    
   "X-Real-IP": ["203.0.113.195", "127.0.0.1"],
   "X-Arbitrary-Id": ["header-test-001"],
-  "X-Forwarded-Scheme": "http",
+  "X-Forwarded-Scheme": ["http", "https"],
 };
 
   //Origin: ["https://trusted-origin.com", "https://evil-origin.com", "null"],
@@ -81,6 +80,10 @@ const wireCases = [
   {
     name: "malformed-request-line",
     request: `GET ${path} HTTP/1.1 EXTRA\r\nHost: ${host}\r\nConnection: close\r\n\r\n`,
+  },
+  {
+    name: "dummy-cookie-token",
+    request: `GET ${path} HTTP/1.1\r\nHost: ${host}\r\nCookie: session_token=dummy-cookie-token\r\nConnection: close\r\n\r\n`,
   },
   {
     name: "lf-only-line-endings",

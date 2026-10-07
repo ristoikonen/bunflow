@@ -1,6 +1,27 @@
 # BunFlow
 
 
+## Headers tester route
+
+Optional local testing aid.
+
+Tester sends GET /headers
+        │
+        ▼
+Bun receives request
+        │
+        ▼
+Bun matches "/headers" in server.ts routes - see section for mapped header list!
+        │
+        ▼
+Route reads selected request headers
+        │
+        ▼
+Route returns JSON containing those headers
+        │
+        ▼
+Tester receives response and can inspect the echoed values
+
 
 ## Installation
 

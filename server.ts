@@ -34,6 +34,22 @@ const imageDir = "./images";
             : errorResponse("Frontend UI index.html not found", 404)
         );
       },
+      // Returns only the selected request headers, not cookies or authorization values.
+      "/headers": (req: BunRequest) => {
+        const names = [
+          "origin",
+          "x-forwarded-for",
+          "x-real-ip",
+          "x-forwarded-scheme",
+          "x-arbitrary-id",
+        ];
+
+        return Response.json({
+          headers: Object.fromEntries(
+            names.map((name) => [name, req.headers.get(name)]),
+          ),
+        });
+      },
 
     },
 
