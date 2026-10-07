@@ -3,7 +3,6 @@ import { mkdir } from "node:fs/promises";
 const host = Bun.env.APP_HOST || "httpbin.org";
 const port = Number(Bun.env.APP_PORT || "443");
 const path = "/headers";
-const requestTimeoutMs = 5000;
 const runId = crypto.randomUUID();
 const target = `${port === 443 ? "https" : "http"}://${host}:${port}${path}`;
 const runTimestamp = new Date().toISOString();
@@ -26,8 +25,6 @@ type Outcome = {
 
 function logRecord(
   testIndex: number,
-  testCase: string,
-  rawRequest: string,
   requestHeaders: Record<string, string>,
   outcome: Outcome,
 ) {
@@ -36,7 +33,7 @@ function logRecord(
     timestamp: new Date().toISOString(),
     target,
     testIndex,
-    features: { method: "GET", path, testCase, requestHeaders, rawRequest },
+    features: { method: "GET", path, requestHeaders },
     outcome,
   };
   const line = JSON.stringify(record);
@@ -54,38 +51,9 @@ const baseHeaders = {
 
 const headerPools = {
   Origin: ["https://trusted-origin.com", "https://evil-origin.com", "null"],
-    "X-Forwarded-For": ["203.0.113.195", "127.0.0.1"],    
-    "X-Real-IP": ["203.0.113.195", "127.0.0.1"],
-    "X-Arbitrary-Id": ["header-test-001"],
-    "Access-Control-Allow-Credentials": ["true"],
+  "X-Forwarded-For": ["203.0.113.195", "127.0.0.1"],
+  "X-Real-IP": ["203.0.113.195", "127.0.0.1"],
 };
-
-const wireCases = [
-  {
-    name: "malformed-request-line",
-    request: `GET ${path} HTTP/1.1 EXTRA\r\nHost: ${host}\r\nConnection: close\r\n\r\n`,
-  },
-  {
-    name: "lf-only-line-endings",
-    request: `GET ${path} HTTP/1.1\nHost: ${host}\nConnection: close\n\n`,
-  },
-  {
-    name: "crlf-line-endings",
-    request: `GET ${path} HTTP/1.1\r\nHost: ${host}\r\nConnection: close\r\n\r\n`,
-  },
-  {
-    name: "repeated-origin-header",
-    request: `GET ${path} HTTP/1.1\r\nHost: ${host}\r\nOrigin: https://trusted-origin.com\r\nOrigin: https://evil-origin.com\r\nConnection: close\r\n\r\n`,
-  },
-  {
-    name: "conflicting-content-length",
-    request: `GET ${path} HTTP/1.1\r\nHost: ${host}\r\nContent-Length: 0\r\nContent-Length: 5\r\nConnection: close\r\n\r\nabcde`,
-  },
-  {
-    name: "content-length-with-transfer-encoding",
-    request: `GET ${path} HTTP/1.1\r\nHost: ${host}\r\nContent-Length: 5\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n0\r\n\r\n`,
-  },
-];
 
 function* mixedHeaders(index = 0, headers: Record<string, string> = {}): Generator<Record<string, string>> {
   const names = Object.keys(headerPools) as (keyof typeof headerPools)[];
@@ -103,8 +71,7 @@ function* mixedHeaders(index = 0, headers: Record<string, string> = {}): Generat
 }
 
 function getRequestHeaders(headers: Record<string, string>) {
-  const requestHost = port === 80 || port === 443 ? host : `${host}:${port}`;
-  return { Host: requestHost, ...baseHeaders, ...headers };
+  return { Host: host, ...baseHeaders, ...headers };
 }
 
 function parseResponse(
@@ -147,7 +114,7 @@ function parseResponse(
     typeof body.headers === "object"
       ? body.headers as Record<string, unknown>
       : null;
-  const echoedHeaders = bodyHeaders && Object.keys(testedHeaders).length > 0
+  const echoedHeaders = bodyHeaders
     ? Object.fromEntries(
         Object.entries(testedHeaders).map(([name, value]) => {
           const echoedValue = Object.entries(bodyHeaders).find(
@@ -172,24 +139,23 @@ function parseResponse(
   };
 }
 
-async function send(
-  testIndex: number,
-  testCase: string,
-  request: string,
-  requestHeaders: Record<string, string>,
-  testedHeaders: Record<string, string>,
-) {
+async function send(testIndex: number, headers: Record<string, string>) {
+  const requestHeaders = getRequestHeaders(headers);
   const responseChunks: Uint8Array[] = [];
   const startedAt = performance.now();
+  const request = [
+    `GET ${path} HTTP/1.1`,
+    ...Object.entries(requestHeaders).map(([name, value]) => `${name}: ${value}`),
+    "",
+    "",
+  ].join("\r\n");
 
   return new Promise<void>((resolve) => {
     let settled = false;
-    let timeout: ReturnType<typeof setTimeout> | undefined;
     const finish = (outcome: Outcome) => {
       if (settled) return;
       settled = true;
-      clearTimeout(timeout);
-      logRecord(testIndex, testCase, request, requestHeaders, outcome);
+      logRecord(testIndex, requestHeaders, outcome);
       resolve();
     };
     const failed = (error: unknown) => ({
@@ -209,19 +175,6 @@ async function send(
       tls: port === 443,
       socket: {
         open(socket) {
-          timeout = setTimeout(() => {
-            finish({
-              statusCode: null,
-              statusText: "",
-              responseHeaders: {},
-              body: null,
-              echoedHeaders: null,
-              echoTestPassed: null,
-              error: `Request timed out after ${requestTimeoutMs} ms`,
-              latencyMs: performance.now() - startedAt,
-            });
-            socket.end();
-          }, requestTimeoutMs);
           socket.write(request);
         },
         data(_socket, data: Uint8Array) {
@@ -231,7 +184,7 @@ async function send(
           finish(parseResponse(
             responseChunks,
             performance.now() - startedAt,
-            testedHeaders,
+            headers,
           ));
         },
         error(_socket, error) {
@@ -244,35 +197,7 @@ async function send(
 
 for (const [index, headers] of [...mixedHeaders()].entries()) {
   const testIndex = index + 1;
-  const requestHeaders = getRequestHeaders(headers);
-  const request = [
-    `GET ${path} HTTP/1.1`,
-    ...Object.entries(requestHeaders).map(([name, value]) => `${name}: ${value}`),
-    "",
-    "",
-  ].join("\r\n");
-  await send(testIndex, "mixed-headers", request, requestHeaders, headers);
-}
-
-if (Bun.env.ALLOW_UNSAFE_HTTP_TESTS === "true" && Bun.env.APP_HOST) {
-  const firstWireTestIndex = Object.values(headerPools).reduce(
-    (count, values) => count * values.length,
-    1,
-  ) + 1;
-
-  for (const [index, test] of wireCases.entries()) {
-    await send(
-      firstWireTestIndex + index,
-      test.name,
-      test.request,
-      {},
-      {},
-    );
-  }
-} else {
-  console.error(
-    "Skipping raw malformed/framing tests. Set APP_HOST to an authorized test server and ALLOW_UNSAFE_HTTP_TESTS=true to enable.",
-  );
+  await send(testIndex, headers);
 }
 
 output.write("\n]\n");
