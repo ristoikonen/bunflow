@@ -1,6 +1,6 @@
 import bun, { connect } from "bun";
 
-const TARGET_HOST = bun.env.APP_HOST || "localhost";
+const TARGET_HOST = "http//:localhost"; //|| bun.env.APP_HOST;
 const TARGET_PORT = parseInt(bun.env.APP_PORT || "3000", 10); 
 
 const LOG_HEADERS = true;
@@ -9,7 +9,7 @@ const REQUESTS_PER_SECOND = 1;
 const REQUEST_INTERVAL_MS = Math.floor(1000 / REQUESTS_PER_SECOND);
 
 // Blind bombardment of HTTP requests!
-// USAGE: Bun services/getheaders.ts
+// USAGE: Bun services/getheadersmall.ts
 
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -31,35 +31,17 @@ type HeaderPools = Record<string, string[]>;
 
 const baseHeaders: HeaderMap = {
     "Host": `${TARGET_HOST}:${TARGET_PORT}`,
-    "X-Forwarded-For": "203.0.113.195",
-    "X-Real-IP": "203.0.113.195",
-    "X-Forwarded-Proto": "http",
-    "X-Forwarded-Scheme": "http",
-    "User-Agent": "Bun-TCP-Stress-Tester",
-    "Server": "nginx",
-    "X-Powered-By": "Express",
-    "Cookie": "session_token=stress-test-dummy-token-abc123",
-    "Origin": "https://trusted-origin.com",
-    "Access-Control-Allow-Origin": "*",
-    "Referer": "https://trusted-origin.com",
-    "X-HTTP-Method-Override": "GET",
-    "Range": "bytes=0-1023",
-    "Content-Type": "application/json",
-    "Content-Length": "0",
-    "Transfer-Encoding": "chunked",
-    "Accept": "*/*",
-    "Connection": "keep-alive"
+    //"User-Agent": "Bun-TCP-Stress-Tester",
+    //"Access-Control-Allow-Origin": "*",
+    //"Accept": "*/*",
+    //"Connection": "keep-alive"
 };
 
 const headerPools: HeaderPools = {
-    "User-Agent": ["BunFlow-Header-Tester"] ,
     "Transfer-Encoding": ["chunked", ""],
-    "Content-Length": ["0", "10", ""], // Hardcoded variations will take priority if matched
-    "Origin": ["https://trusted-origin.com", "https://evil-origin.com", "null", ""],
-    "Access-Control-Allow-Origin": ["*", "https://trusted-origin.com", "null"],
-    "X-Forwarded-For": ["203.0.113.195", "127.0.0.1", "10.0.0.1, 192.168.1.1"],
     "X-Real-IP": ["203.0.113.195", "127.0.0.1"]
 };
+
 
 // Calculate total combinations accounting for both headers and payload bodies
 const totalIterations: number = Object.values(headerPools).reduce(

@@ -18,7 +18,7 @@
 const TARGET_BIN_HOST = Bun.env.APP_HOST || "httpbin.org";
 const TARGET_BIN_PORT = parseInt(Bun.env.APP_PORT || "443", 10)
 
-const TOTAL_BIN_REQUESTS = 1; 
+const TOTAL_BIN_REQUESTS = 5; 
 const BIN_CONCURRENCY = 1;   
 
 
@@ -67,11 +67,11 @@ async function sendBinRequest() {
         data(socket: any, data: Uint8Array) {
           completedBinRequests++;
           
-          if (completedBinRequests === 1) {
-            console.log("\n--- Sample Response from httpbin.org ---");
+          //if (completedBinRequests === 1) {
+            console.log("\n---  Response  ---");
             console.log(new TextDecoder().decode(data));
             console.log("----------------------------------------\n");
-          }
+          //}
 
           socket.end();
         },
