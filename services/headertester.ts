@@ -50,15 +50,32 @@ const baseHeaders = {
   Accept: "*/*",
   "User-Agent": "Bun-Header-Tester",
   "Connection": "close",
+  "Cookie": "session_token=stress-test-dummy-token-abc123",
+  "Access-Control-Allow-Origin": "*",
 };
+  
+  //"Connection": "keep-alive",
+  //"Server": "nginx",
+  //"Content-Type": "application/json",
+  //"Content-Length": "0",
+
 
 const headerPools = {
-  Origin: ["https://trusted-origin.com", "https://evil-origin.com", "null"],
-    "X-Forwarded-For": ["203.0.113.195", "127.0.0.1"],    
-    "X-Real-IP": ["203.0.113.195", "127.0.0.1"],
-    "X-Arbitrary-Id": ["header-test-001"],
-    "Access-Control-Allow-Credentials": ["true"],
+  "X-Forwarded-For": ["203.0.113.195", "127.0.0.1"],    
+  "X-Real-IP": ["203.0.113.195", "127.0.0.1"],
+  "X-Arbitrary-Id": ["header-test-001"],
+  "X-Forwarded-Scheme": "http",
 };
+
+  //Origin: ["https://trusted-origin.com", "https://evil-origin.com", "null"],
+
+  //  "Referer": "https://trusted-origin.com",
+  //"X-Powered-By": "Express",
+  //"X-HTTP-Method-Override": "GET",
+  //"Access-Control-Allow-Credentials": ["true"],
+  //"Range": "bytes=0-1023",
+  //"Transfer-Encoding": "chunked",
+
 
 const wireCases = [
   {
