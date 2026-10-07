@@ -1,0 +1,41 @@
+[
+  {
+    "timestamp": "2026-10-06T23:34:04.877Z",
+    "testName": "Test 1 - 400 Bad Request Mix",
+    "url": "https://httpbun.com/mix/s=400/h=content-type:application%2Fjson/b64=eyJzdGF0dXMiOiJlcnJvciIsIm1lc3NhZ2UiOiJCYWQgUmVxdWVzdCB0cmFja2VkIn0=",
+    "status": 400,
+    "contentType": "application/json",
+    "payload": {
+      "status": "error",
+      "message": "Bad Request tracked"
+    }
+  },
+  {
+    "timestamp": "2026-10-06T23:34:05.387Z",
+    "testName": "Test 2 - Random Mix Attempt #1",
+    "url": "https://httpbun.com/mix/s=200,400,500",
+    "status": 400,
+    "contentType": null
+  },
+  {
+    "timestamp": "2026-10-06T23:34:05.544Z",
+    "testName": "Test 2 - Random Mix Attempt #2",
+    "url": "https://httpbun.com/mix/s=200,400,500",
+    "status": 200,
+    "contentType": null
+  },
+  {
+    "timestamp": "2026-10-06T23:34:05.702Z",
+    "testName": "Test 2 - Random Mix Attempt #3",
+    "url": "https://httpbun.com/mix/s=200,400,500",
+    "status": 200,
+    "contentType": null
+  },
+  {
+    "timestamp": "2026-10-06T23:34:05.860Z",
+    "testName": "Test 3 - Custom Tracking Header Mix",
+    "url": "https://httpbun.com/mix/h=x-test-tracker:bun-app-mix-test/s=201",
+    "status": 201,
+    "contentType": null
+  }
+]
