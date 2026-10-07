@@ -31,6 +31,15 @@ bunbase/
 
 ```
 
+## GitHub CoPilot
+
+Work with main!
+
+- Start a **new session** in the Copilot app.
+- Select the **bunflow** project.
+- Open the workspace type options and choose **Branch** instead of **Worktree**.
+- Select **`main`** as the branch.
+- Create the session.
 
 ## Development Commands
 

@@ -67,18 +67,23 @@ const totalIterations: number = Object.values(headerPools).reduce(
 ) * bodyPool.length;
 
 function* generateHeaderCombos(pools: HeaderPools): Generator<HeaderMap, void, unknown> {
-    const keys: string[] = Object.keys(pools);
-    const values: string[][] = Object.values(pools);
+    const entries = Object.entries(pools);
 
     function* cartesian(index: number, currentCombo: HeaderMap): Generator<HeaderMap, void, unknown> {
-        if (index === keys.length) {
+        if (index === entries.length) {
             yield currentCombo;
             return;
         }
-        for (const val of values[index]) {
-            yield* cartesian(index + 1, { ...currentCombo, [keys[index]]: val });
+
+        const entry = entries[index];
+        if (!entry) throw new Error(`Missing header pool at index ${index}`);
+
+        const [key, values] = entry;
+        for (const val of values) {
+            yield* cartesian(index + 1, { ...currentCombo, [key]: val });
         }
     }
+
     yield* cartesian(0, {});
 }
 
